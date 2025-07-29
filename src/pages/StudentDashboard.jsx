@@ -1,9 +1,7 @@
-// src/pages/StudentDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { db, storage } from '../firebase';
+import { db } from '../firebase'; // No longer need 'storage'
 import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
 import styles from './StudentDashboard.module.css';
@@ -11,7 +9,7 @@ import styles from './StudentDashboard.module.css';
 const StudentDashboard = () => {
   const { currentUser } = useAuth();
   const [documents, setDocuments] = useState([]);
-  const [file, setFile] = useState(null);
+  const [googleDriveLink, setGoogleDriveLink] = useState(''); // Changed from 'file'
   const [documentType, setDocumentType] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
@@ -32,49 +30,59 @@ const StudentDashboard = () => {
   };
 
   useEffect(() => {
-    fetchDocuments();
-  }, [currentUser]); // Re-fetch when current user changes
+    if (currentUser) fetchDocuments();
+  }, [currentUser]);
 
-  const handleFileUpload = async (e) => {
+
+  const handleDocumentSubmit = async (e) => { // Renamed from handleFileUpload for clarity
     e.preventDefault();
     setUploadError('');
-    if (!file) {
-      setUploadError("Please select a file to upload.");
+
+    if (!googleDriveLink.trim()) {
+      setUploadError("Please provide a Google Drive link.");
       return;
     }
+    // Basic URL validation
+    try {
+      new URL(googleDriveLink);
+    } catch (err) {
+      setUploadError("Please enter a valid URL for the Google Drive link.");
+      return;
+    }
+
     if (!documentType.trim()) {
       setUploadError("Please specify a document type (e.g., 'Marksheet', 'Certificate').");
       return;
     }
     if (!currentUser) {
-      setUploadError("You must be logged in to upload files.");
+      setUploadError("You must be logged in to submit documents.");
       return;
     }
 
     setUploading(true);
     try {
-      // 1. Upload file to Firebase Storage
-      const storageRef = ref(storage, `user_uploads/${currentUser.uid}/${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
+      // 1. You might want to extract file name from the Google Drive link if possible,
+      // or prompt the user for it. For now, we'll use a generic name or part of the URL.
+      // A more robust solution might involve Google Drive API to get file details.
+      const fileNameFromLink = googleDriveLink.substring(googleDriveLink.lastIndexOf('/') + 1) || 'Google Drive Document';
 
       // 2. Store document metadata in Firestore
       await addDoc(collection(db, 'documents'), {
         userId: currentUser.uid,
-        fileName: file.name,
-        fileUrl: downloadURL,
+        fileName: fileNameFromLink, // Using part of the link as file name
+        fileUrl: googleDriveLink, // Storing the Google Drive link directly
         documentType: documentType.trim(),
         uploadDate: serverTimestamp(),
         status: 'pending', // Initial status
       });
 
-      alert('File uploaded successfully!');
-      setFile(null);
+      alert('Document link submitted successfully!');
+      setGoogleDriveLink('');
       setDocumentType('');
       await fetchDocuments(); // Refresh the list of documents
     } catch (err) {
-      console.error("Error uploading file:", err);
-      setUploadError(`Failed to upload file: ${err.message}`);
+      console.error("Error submitting document link:", err);
+      setUploadError(`Failed to submit document link: ${err.message}`);
     } finally {
       setUploading(false);
     }
@@ -85,9 +93,9 @@ const StudentDashboard = () => {
       <h1>Welcome, Student!</h1>
 
       <div className={styles.uploadSection}>
-        <h2>Upload New Document</h2>
+        <h2>Submit New Document Link</h2>
         {uploadError && <p className={styles.errorText}>{uploadError}</p>}
-        <form onSubmit={handleFileUpload} className={styles.uploadForm}>
+        <form onSubmit={handleDocumentSubmit} className={styles.uploadForm}> {/* Changed onSubmit handler */}
           <InputField
             label="Document Type (e.g., Marksheet, Certificate)"
             type="text"
@@ -97,29 +105,31 @@ const StudentDashboard = () => {
             required
           />
           <InputField
-            label="Select File"
-            type="file"
-            onChange={(e) => setFile(e.target.files[0])}
+            label="Google Drive Link"
+            type="url" // Use type="url" for better browser validation
+            value={googleDriveLink}
+            onChange={(e) => setGoogleDriveLink(e.target.value)}
+            placeholder="e.g., https://drive.google.com/file/d/..."
             required
           />
           <Button type="submit" disabled={uploading} variant="primary">
-            {uploading ? 'Uploading...' : 'Upload Document'}
+            {uploading ? 'Submitting...' : 'Submit Document Link'}
           </Button>
         </form>
       </div>
 
       <div className={styles.documentsSection}>
-        <h2>Your Uploaded Documents</h2>
+        <h2>Your Submitted Documents</h2>
         {fetchError && <p className={styles.errorText}>{fetchError}</p>}
         {documents.length === 0 ? (
-          <p>You haven't uploaded any documents yet.</p>
+          <p>You haven't submitted any document links yet.</p>
         ) : (
           <table className={styles.documentsTable}>
             <thead>
               <tr>
                 <th>File Name</th>
                 <th>Type</th>
-                <th>Upload Date</th>
+                <th>Submission Date</th> {/* Changed from Upload Date */}
                 <th>Status</th>
                 <th>Action</th>
               </tr>
