@@ -1,0 +1,81 @@
+/* src/pages/StudentDashboard.module.css */
+.dashboardContainer {
+  padding: 20px;
+  max-width: 900px;
+  margin: 20px auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.dashboardContainer h1 {
+  color: #2c3e50;
+  margin-bottom: 30px;
+  text-align: center;
+  font-size: 2.5rem;
+}
+
+.uploadSection, .documentsSection {
+  margin-bottom: 40px;
+  padding: 25px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fcfcfc;
+}
+
+.uploadSection h2, .documentsSection h2 {
+  color: #34495e;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.8rem;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 10px;
+}
+
+.uploadForm {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.errorText {
+  color: #dc3545;
+  margin-bottom: 15px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.documentsTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.documentsTable th, .documentsTable td {
+  border: 1px solid #dee2e6;
+  padding: 12px;
+  text-align: left;
+}
+
+.documentsTable th {
+  background-color: #e9ecef;
+  color: #495057;
+  font-weight: 600;
+}
+
+.documentsTable tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.documentsTable tr:hover {
+  background-color: #e2f2ff; /* Light blue hover */
+}
+
+.documentsTable td a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.documentsTable td a:hover {
+  text-decoration: underline;
+}

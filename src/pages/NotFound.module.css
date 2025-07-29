@@ -1,0 +1,47 @@
+/* src/pages/NotFound.module.css */
+.notFoundContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 70px); /* Adjust for navbar height */
+  text-align: center;
+  background-color: #f8f9fa;
+  color: #343a40;
+}
+
+.statusCode {
+  font-size: 8rem;
+  font-weight: bold;
+  color: #dc3545; /* Red color for error */
+  margin-bottom: 20px;
+}
+
+.message {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+  color: #2c3e50;
+}
+
+.description {
+  font-size: 1.1rem;
+  color: #6c757d;
+  margin-bottom: 30px;
+  max-width: 500px;
+  line-height: 1.5;
+}
+
+.homeLink {
+  display: inline-block;
+  padding: 12px 25px;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  font-size: 1.1rem;
+  transition: background-color 0.3s ease;
+}
+
+.homeLink:hover {
+  background-color: #0056b3;
+}
