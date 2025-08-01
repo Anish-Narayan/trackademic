@@ -1,0 +1,54 @@
+.app-header {
+  background-color: #004d99;
+  color: #ffffff;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.app-header .logo h1 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.app-header .logo p {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.app-header .user-info p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.app-header .user-info strong {
+  text-transform: capitalize;
+}
+
+.app-header .login-controls button {
+  background-color: #ff9900;
+  border: none;
+  color: white;
+  padding: 0.75rem 1.25rem;
+  margin-left: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.app-header .login-controls button:hover {
+  background-color: #e68a00;
+}
+
+.app-header .login-controls button.active {
+  background-color: #007bff;
+  cursor: default;
+}
+
+.app-header .login-controls button.active:hover {
+  background-color: #007bff;
+}

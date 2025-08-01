@@ -1,0 +1,142 @@
+/* General Dashboard Layout */
+.dashboard-container {
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-container h2 {
+  color: #004d99;
+  border-bottom: 2px solid #ff9900;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-container h3 {
+  color: #333;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+/* Sections (Forms, Tables, Filters) */
+.submission-form,
+.filter-controls,
+.my-submissions,
+.records-table {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Form Styling */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #555;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+/* Button Styling */
+button {
+  background-color: #007bff;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+button[disabled] {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Filter Controls Styling */
+.filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-end;
+}
+
+.filter-controls .filter-group {
+  flex: 1 1 200px;
+  margin-bottom: 0;
+}
+
+.filter-controls button {
+  white-space: nowrap;
+}
+
+/* Table Styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+table th,
+table td {
+  text-align: left;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+}
+
+table th {
+  background-color: #eef;
+  font-weight: bold;
+  color: #333;
+}
+
+table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+table a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+table a:hover {
+  text-decoration: underline;
+}
+
+/* Empty State Message */
+.records-table td[colspan] {
+  text-align: center;
+  font-style: italic;
+  color: #888;
+}
+/* Add to Dashboard.css */
+.loading-spinner {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #004d99;
+  padding: 5rem 0;
+}
+.error-message {
+  color: red;
+  margin-top: 1rem;
+}
