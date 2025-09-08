@@ -28,6 +28,81 @@ const ReviewModal = ({ submission, onUpdate, onClose, isUpdating }) => {
   );
 };
 
+// --- NEW FEATURE 1: Download Options Modal ---
+const DownloadOptionsModal = ({ isOpen, onClose, onConfirm, fields, setFields, fileNameSuffix, setFileNameSuffix }) => {
+  if (!isOpen) return null;
+
+  const handleFieldChange = (key, attribute, value) => {
+    setFields(prevFields => ({
+      ...prevFields,
+      [key]: {
+        ...prevFields[key],
+        [attribute]: value,
+      },
+    }));
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <h3 className="text-xl font-bold mb-4 text-gray-800">Download Report Options</h3>
+        
+        {/* Report Name Input */}
+        <div className="mb-6">
+          <label className="block text-gray-600 font-semibold mb-1 text-sm">Report Name</label>
+          <div className="flex items-center">
+            <span className="bg-gray-200 p-2 rounded-l-md text-gray-700 font-mono">CIT_REPORT_</span>
+            <input 
+              type="text"
+              value={fileNameSuffix}
+              onChange={(e) => setFileNameSuffix(e.target.value)}
+              placeholder="e.g., Q1_2024_Submissions"
+              className="w-full p-2 border border-gray-300 rounded-r-md focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        {/* Field Selection */}
+        <div className="mb-6 flex-grow overflow-y-auto pr-2">
+          <label className="block text-gray-600 font-semibold mb-2 text-sm">Select Columns to Export</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+            {Object.keys(fields).map(key => (
+              <div key={key} className="space-y-1">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id={`field-${key}`}
+                    checked={fields[key].selected}
+                    onChange={(e) => handleFieldChange(key, 'selected', e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor={`field-${key}`} className="ml-2 block text-sm text-gray-900">{fields[key].label}</label>
+                </div>
+                {fields[key].selected && (
+                  <input
+                    type="text"
+                    value={fields[key].customName}
+                    onChange={(e) => handleFieldChange(key, 'customName', e.target.value)}
+                    placeholder={`Custom Header (default: ${fields[key].label})`}
+                    className="w-full p-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="mt-4 pt-4 border-t flex justify-end space-x-3">
+          <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
+          <button onClick={onConfirm} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Confirm & Download</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 const StaffDashboard = () => {
   const { user, loading: authLoading } = useAuth();
 
@@ -35,7 +110,6 @@ const StaffDashboard = () => {
   const [filteredSubmissions, setFilteredSubmissions] = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
   
-  // --- CHANGED 1: State now includes all time filters ---
   const [filters, setFilters] = useState({ 
     batch: '', 
     month: '', 
@@ -48,6 +122,22 @@ const StaffDashboard = () => {
   
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // --- CHANGED 1: State management for new download features ---
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  const [fileNameSuffix, setFileNameSuffix] = useState('');
+  const [fieldsToExport, setFieldsToExport] = useState({
+    displayName: { label: 'Student Name', selected: true, customName: '' },
+    email: { label: 'Email', selected: true, customName: '' },
+    eventName: { label: 'Event Name', selected: true, customName: '' },
+    eventDate: { label: 'Event Date', selected: true, customName: '' },
+    batch: { label: 'Batch', selected: true, customName: '' },
+    status: { label: 'Status', selected: true, customName: '' },
+    semester: { label: 'Semester', selected: false, customName: '' },
+    eventType: { label: 'Event Type', selected: false, customName: '' },
+    googleDriveLink: { label: 'Certificate Link', selected: false, customName: '' },
+  });
+
 
   useEffect(() => {
     if (!user || user.role !== 'staff') {
@@ -71,7 +161,6 @@ const StaffDashboard = () => {
     return () => unsubscribe();
   }, [user]);
 
-  // --- CHANGED 2: Filtering logic updated for both month and date range ---
   useEffect(() => {
     let filtered = allSubmissions;
 
@@ -80,14 +169,12 @@ const StaffDashboard = () => {
     if (filters.semester) filtered = filtered.filter((sub) => sub.semester === filters.semester);
     if (filters.eventType) filtered = filtered.filter((sub) => sub.eventType === filters.eventType);
 
-    // Time-based filtering: either by month OR by date range
     if (filters.month) {
       const month = parseInt(filters.month, 10);
       filtered = filtered.filter((sub) => sub.eventDate && new Date(sub.eventDate).getMonth() + 1 === month);
     } else if (filters.startDate && filters.endDate) {
       const start = new Date(filters.startDate);
       const end = new Date(filters.endDate);
-      // Set time to the end of the day to include all events on the end date
       end.setHours(23, 59, 59, 999);
       
       filtered = filtered.filter((sub) => {
@@ -100,20 +187,15 @@ const StaffDashboard = () => {
     setFilteredSubmissions(filtered);
   }, [filters, allSubmissions]);
 
-  // --- CHANGED 3: Handler now resets conflicting filters ---
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    
-    // Create a mutable copy of the filters
     const newFilters = { ...filters, [name]: value };
 
-    // If a month is selected, clear the date range
     if (name === 'month' && value !== '') {
       newFilters.startDate = '';
       newFilters.endDate = '';
     }
     
-    // If a date is selected, clear the month
     if ((name === 'startDate' || name === 'endDate') && value !== '') {
       newFilters.month = '';
     }
@@ -135,12 +217,41 @@ const StaffDashboard = () => {
     }
   };
 
+  // --- CHANGED 2: New download handler to process options from the modal ---
   const handleDownload = () => {
-    const dataToExport = filteredSubmissions.map(({ id, studentId, ...rest }) => rest);
+    // 1. Validate inputs from the modal
+    const activeFields = Object.keys(fieldsToExport).filter(key => fieldsToExport[key].selected);
+    if (activeFields.length === 0) {
+      alert("Please select at least one column to download.");
+      return;
+    }
+    if (!fileNameSuffix.trim()) {
+      alert("Please provide a name for the report file.");
+      return;
+    }
+    
+    // 2. Prepare data based on user selections
+    const dataToExport = filteredSubmissions.map(submission => {
+      const row = {};
+      activeFields.forEach(key => {
+        // Use custom header if provided, otherwise use the default label
+        const header = fieldsToExport[key].customName.trim() || fieldsToExport[key].label;
+        row[header] = submission[key] || ''; // Handle cases where a field might be null/undefined
+      });
+      return row;
+    });
+
+    // 3. Create and download the Excel file
     const ws = XLSX.utils.json_to_sheet(dataToExport);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Student Records');
-    XLSX.writeFile(wb, `Trackademic_${user.department}_Records.xlsx`);
+    
+    // Construct the final filename
+    const finalFileName = `CIT_REPORT_${fileNameSuffix.trim().replace(/ /g, '_')}.xlsx`;
+    XLSX.writeFile(wb, finalFileName);
+    
+    // 4. Close the modal after download
+    setIsDownloadModalOpen(false);
   };
 
   if (authLoading) {
@@ -156,13 +267,23 @@ const StaffDashboard = () => {
         isUpdating={isUpdating}
       />
       
+      {/* --- NEW: Render the download options modal --- */}
+      <DownloadOptionsModal
+        isOpen={isDownloadModalOpen}
+        onClose={() => setIsDownloadModalOpen(false)}
+        onConfirm={handleDownload}
+        fields={fieldsToExport}
+        setFields={setFieldsToExport}
+        fileNameSuffix={fileNameSuffix}
+        setFileNameSuffix={setFileNameSuffix}
+      />
+      
       <h2 className="text-2xl md:text-3xl font-bold text-[#004d99] border-b-2 border-[#ff9900] pb-2 mb-6">Staff Dashboard</h2>
       <p className="mb-6 text-gray-700">Welcome, <span className="font-bold">{user.displayName}</span> | Department of <span className="font-bold">{user.department}</span></p>
 
-      {/* --- Filter Section --- */}
+      {/* Filter Section */}
       <section className="bg-white border rounded-lg p-6 mb-8 shadow-md">
         <h3 className="text-xl font-semibold text-gray-800 mb-4">Filter Records</h3>
-        {/* --- CHANGED 4: Updated grid layout for more filters --- */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-end">
           
           <div>
@@ -186,7 +307,6 @@ const StaffDashboard = () => {
             </select>
           </div>
 
-          {/* --- NEW: Month and Date Range inputs --- */}
           <div>
             <label className="block text-gray-600 font-semibold mb-1 text-sm">Month</label>
             <select 
@@ -249,8 +369,9 @@ const StaffDashboard = () => {
           </div>
           
           <div className="lg:col-start-5 xl:col-start-auto">
+             {/* --- CHANGED 3: Button now opens the modal --- */}
             <button
-              onClick={handleDownload}
+              onClick={() => setIsDownloadModalOpen(true)}
               disabled={filteredSubmissions.length === 0}
               className="w-full bg-[#007bff] hover:bg-[#0056b3] text-white font-bold py-2 px-4 rounded-md transition-colors whitespace-nowrap disabled:bg-gray-400 disabled:cursor-not-allowed h-[42px]"
             >
@@ -260,7 +381,7 @@ const StaffDashboard = () => {
         </div>
       </section>
 
-      {/* --- Table Section (No changes needed here) --- */}
+      {/* Table Section (No changes here) */}
       <section className="bg-white border rounded-lg p-6 shadow-md">
         <h3 className="text-xl font-semibold text-gray-800 mb-4">Student Submissions ({filteredSubmissions.length})</h3>
         <div className="overflow-x-auto">

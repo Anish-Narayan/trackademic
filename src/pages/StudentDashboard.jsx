@@ -11,9 +11,8 @@ import { useAuth } from '../hooks/useAuth';
  */
 const StudentDashboard = () => {
   // --- Hooks and State Management ---
-  const { user, loading: authLoading } = useAuth(); // Get user and auth loading status from the central hook
+  const { user, loading: authLoading } = useAuth();
 
-  // State specific to this component's functionality
   const [submissions, setSubmissions] = useState([]);
   const [submissionsLoading, setSubmissionsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,7 +26,6 @@ const StudentDashboard = () => {
 
   // --- Data Fetching and Side Effects ---
   useEffect(() => {
-    // If there is no authenticated user, don't fetch data.
     if (!user) {
       setSubmissions([]);
       setSubmissionsLoading(false);
@@ -38,10 +36,9 @@ const StudentDashboard = () => {
     const submissionsCollectionPath = `/artifacts/${appId}/public/data/submissions`;
     const q = query(
       collection(db, submissionsCollectionPath),
-      where("studentId", "==", user.uid) // Query by the user's unique ID for security
+      where("studentId", "==", user.uid)
     );
 
-    // onSnapshot listens for real-time updates to the query.
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const submissionsData = querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -49,7 +46,7 @@ const StudentDashboard = () => {
         lastModified: doc.data().lastModified ? doc.data().lastModified.toDate() : null
       }));
 
-      submissionsData.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0)); // Show newest first
+      submissionsData.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
       setSubmissions(submissionsData);
       setSubmissionsLoading(false);
     }, (error) => {
@@ -57,14 +54,39 @@ const StudentDashboard = () => {
       setSubmissionsLoading(false);
     });
 
-    // Cleanup the listener when the component unmounts or the user changes.
     return () => unsubscribe();
-  }, [user]); // Re-run this effect if the user object changes.
+  }, [user]);
 
   // --- Event Handlers ---
+
+  // --- NEW FEATURE: Helper function to convert strings to Title Case ---
+  /**
+   * Converts a string to title case (e.g., "hello world" -> "Hello World").
+   * @param {string} str The input string.
+   * @returns {string} The title-cased string.
+   */
+  const toTitleCase = (str) => {
+    if (!str) return '';
+    return str
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // --- CHANGED: `handleChange` now formats specific fields to Title Case ---
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setNewSubmission(prev => ({ ...prev, [name]: value }));
+    
+    // Define which fields should be automatically formatted
+    const fieldsToTitleCase = ['eventName', 'organizer', 'hostingInstitution'];
+
+    // Apply the title case formatting only to the specified fields
+    const processedValue = fieldsToTitleCase.includes(name)
+      ? toTitleCase(value)
+      : value;
+
+    setNewSubmission(prev => ({ ...prev, [name]: processedValue }));
   };
 
   const handleSubmit = async (e) => {
@@ -87,13 +109,12 @@ const StudentDashboard = () => {
         department: user.department,
         batch: user.batch,
         lastModified: serverTimestamp(),
-        status: 'pending' // Default status for new submissions, ideal for a review workflow.
+        status: 'pending'
       };
       
       await addDoc(collection(db, `/artifacts/${appId}/public/data/submissions`), submissionWithUserData);
       
       setSuccessMessage("Submission successful! It is now pending for review.");
-      // Reset the form fields after successful submission.
       setNewSubmission({
         eventName: '', eventType: '', organizer: '', hostingInstitution: '',
         level: '', eventDate: '', semester: '', googleDriveLink: ''
@@ -108,7 +129,6 @@ const StudentDashboard = () => {
 
   // --- JSX Rendering Logic ---
 
-  // 1. Show a full-page loader while useAuth confirms the user's session.
   if (authLoading) {
     return (
       <div className="flex justify-center items-center h-screen text-xl text-blue-800">
@@ -121,13 +141,11 @@ const StudentDashboard = () => {
     );
   }
 
-  // 2. Render the main dashboard content.
   return (
     <div className="container mx-auto p-4 md:p-8 font-sans max-w-7xl">
       <h2 className="text-2xl md:text-3xl font-bold text-[#004d99] border-b-2 border-[#ff9900] pb-2 mb-6">Student Dashboard</h2>
       <p className="mb-6 text-gray-700">Welcome, <span className="font-bold">{user.displayName}</span> (Batch: <span className="font-bold">{user.batch}</span>)</p>
 
-      {/* Success Message Alert */}
       {successMessage && (
         <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4" role="alert">
           <p className="font-bold">Success</p>
@@ -192,6 +210,7 @@ const StudentDashboard = () => {
               <option value="3">3</option><option value="4">4</option>
               <option value="5">5</option><option value="6">6</option>
               <option value="7">7</option><option value="8">8</option>
+              <option value="9">9</option><option value="10">10</option>
             </select>
           </div>
 
